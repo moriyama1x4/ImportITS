@@ -13,6 +13,7 @@ function importIts() {
     ]);
     
     detailTrs.forEach(function(value2, index2){
+      
       //一覧からとれるもの
       //運営会社取得
       var company = listCategory[index1];
@@ -26,11 +27,12 @@ function importIts() {
       
       //県入力
       setData(row,2,prefecture);
-      
+	  
       
       //ゴルフ場名取得
       var courseName = getTags(value2, 'a', '<a.*?>', '')[0];
       
+	  
       //ゴルフ場名入力
       setData(row,3,courseName);
       
@@ -104,6 +106,33 @@ function importIts() {
 				setData(row,6,Utilities.formatString('%05d',feeTds[1].replace(/,|円|<(\/)?p>/g,'')));
 			}
 		}
+	  }
+	  
+	  //ここからGDO
+	  var gdoHtml = UrlFetchApp.fetch('https://reserve.golfdigest.co.jp/s/search/calendar/?q=' + courseName.replace('　',''), {muteHttpExceptions: true}).getContentText('UTF-8');
+	  var ids = gdoHtml.match(/id="id_course_[0-9]+?"/g);
+	  
+	  if(ids){
+		  if(ids.length == 1){
+			//GDO評価取得
+			var gdoScore = getChildTags(gdoHtml, [
+			['div', '<div class="result-list-review.*?>','',0],['span', '<span.*?>','[0-9]\.[0-9]']
+			])[0];
+			
+			//GDO評価入力
+			setData(row,10,gdoScore);
+			
+			//GDOid取得
+			var id = ids[0].match(/[0-9]+/)[0];
+			
+			//GDOページ入力
+			setData(row,11,'https://reserve.golfdigest.co.jp/golf-course/calendar/' + id)
+			
+		  }else{
+			setData(row,10,'A')
+		  }
+	  }else{
+		setData(row,10,'B')
 	  }
 	  
 	  
